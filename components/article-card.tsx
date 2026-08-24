@@ -4,6 +4,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { CATEGORIES, type Article } from "@/lib/mock-data";
+import { BookmarkButton } from "@/components/bookmark-button";
 
 function categoryLabel(value: Article["category"]): string {
   return CATEGORIES.find((c) => c.value === value)?.label ?? value;
@@ -23,6 +24,7 @@ export function ArticleCard({ article }: { article: Article }) {
           sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"
           className="object-cover"
         />
+        <BookmarkButton articleId={article.id} />
       </div>
       <div className="p-4">
         <span className="text-xs font-medium uppercase tracking-wide text-red-600">
