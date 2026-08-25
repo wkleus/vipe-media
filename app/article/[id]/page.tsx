@@ -6,7 +6,6 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { CATEGORIES, getMockArticleById } from "@/lib/mock-data";
 
-// Next.js 16: params is now a Promise and must be awaited before use
 export default async function ArticleDetailPage({
   params,
 }: {
@@ -32,18 +31,20 @@ export default async function ArticleDetailPage({
     <main className="mx-auto max-w-3xl px-4 py-8">
       <Link
         href="/"
-        className="mb-6 inline-block text-sm text-neutral-500 hover:text-neutral-800"
+        className="mb-6 inline-block text-sm text-foreground/50 hover:text-foreground/90"
       >
         ← Zurück zum Feed
       </Link>
 
-      <span className="text-xs font-medium uppercase tracking-wide text-red-600">
+      <span className="text-xs font-medium uppercase tracking-wide text-accent">
         {categoryLabel}
       </span>
 
-      <h1 className="mt-2 text-3xl font-bold leading-tight">{article.title}</h1>
+      <h1 className="mt-2 font-serif text-3xl font-semibold leading-tight">
+        {article.title}
+      </h1>
 
-      <p className="mt-2 text-sm text-neutral-500">
+      <p className="mt-2 text-sm text-foreground/50">
         {article.sourceName} · {article.author} · {date}
       </p>
 
@@ -57,7 +58,7 @@ export default async function ArticleDetailPage({
         />
       </div>
 
-      <div className="mt-6 space-y-4 text-lg leading-relaxed text-neutral-800">
+      <div className="mt-6 space-y-4 text-lg leading-relaxed text-foreground/90">
         {/* Fallback text since content is currently empty in mock-data.ts */}
         <p>{article.content || article.description}</p>
       </div>

@@ -1,5 +1,4 @@
-// Simple card component showing one article preview
-// Minimal version for now - no bookmark button, no theming yet
+// Card component showing one article preview
 
 import Link from "next/link";
 import Image from "next/image";
@@ -14,7 +13,7 @@ export function ArticleCard({ article }: { article: Article }) {
   return (
     <Link
       href={`/article/${article.id}`}
-      className="block overflow-hidden rounded-lg border border-neutral-200 hover:border-neutral-400 transition-colors"
+      className="block overflow-hidden rounded-lg border border-border hover:border-foreground/30 transition-colors"
     >
       <div className="relative aspect-[16/10] w-full bg-neutral-100">
         <Image
@@ -27,13 +26,13 @@ export function ArticleCard({ article }: { article: Article }) {
         <BookmarkButton articleId={article.id} />
       </div>
       <div className="p-4">
-        <span className="text-xs font-medium uppercase tracking-wide text-red-600">
+        <span className="text-xs font-medium uppercase tracking-wide text-accent">
           {categoryLabel(article.category)}
         </span>
-        <h3 className="mt-1 text-lg font-semibold leading-snug">
+        <h3 className="mt-1 font-serif text-lg font-semibold leading-snug">
           {article.title}
         </h3>
-        <p className="mt-2 text-sm text-neutral-600 line-clamp-2">
+        <p className="mt-2 text-sm text-foreground/60 line-clamp-2">
           {article.description}
         </p>
       </div>

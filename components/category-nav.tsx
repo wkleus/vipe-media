@@ -16,24 +16,26 @@ export function CategoryNav({ active, onChange }: CategoryNavProps) {
   ];
 
   return (
-    <div className="flex gap-2 overflow-x-auto border-b border-neutral-200 px-4 py-3">
-      {options.map((opt) => {
-        const isActive = active === opt.value;
-        return (
-          <button
-            key={opt.value}
-            type="button"
-            onClick={() => onChange(opt.value)}
-            className={
-              isActive
-                ? "whitespace-nowrap rounded-full bg-red-600 px-3.5 py-1.5 text-sm font-medium text-white"
-                : "whitespace-nowrap rounded-full px-3.5 py-1.5 text-sm font-medium text-neutral-600 hover:bg-neutral-100"
-            }
-          >
-            {opt.label}
-          </button>
-        );
-      })}
+    <div className="border-b border-border">
+      <div className="mx-auto flex max-w-6xl gap-2 overflow-x-auto px-4 py-3">
+        {options.map((opt) => {
+          const isActive = active === opt.value;
+          return (
+            <button
+              key={opt.value}
+              type="button"
+              onClick={() => onChange(opt.value)}
+              className={
+                isActive
+                  ? "whitespace-nowrap rounded-full bg-accent px-3.5 py-1.5 text-sm font-medium text-white"
+                  : "whitespace-nowrap rounded-full px-3.5 py-1.5 text-sm font-medium text-foreground/60 hover:bg-foreground/5"
+              }
+            >
+              {opt.label}
+            </button>
+          );
+        })}
+      </div>
     </div>
   );
 }
