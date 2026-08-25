@@ -11,6 +11,13 @@ export function Header() {
         >
           VIPE <span className="text-accent">Media</span>
         </Link>
+
+        <Link
+          href="/bookmarks"
+          className="ml-auto text-sm font-medium text-foreground/70 hover:text-foreground"
+        >
+          Lesezeichen
+        </Link>
       </div>
     </header>
   );

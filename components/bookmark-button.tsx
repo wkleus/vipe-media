@@ -11,15 +11,33 @@ const STORAGE_KEY = "vipe-media:bookmarks";
 // Custom event name -> fired manually on every write
 const BOOKMARKS_CHANGED_EVENT = "vipe-media:bookmarks-changed";
 
+// Module-level cache
+// Track last parsed raw string, and only build new array when that raw string actually differs
+let cachedRaw: string | null = null;
+let cachedBookmarks: string[] = [];
+
 function readBookmarks(): string[] {
   if (typeof window === "undefined") return [];
+
+  let raw: string | null;
   try {
-    const raw = window.localStorage.getItem(STORAGE_KEY);
-    return raw ? (JSON.parse(raw) as string[]) : [];
+    raw = window.localStorage.getItem(STORAGE_KEY);
   } catch {
-    // Corrupted/tampered localStorage should not crash app
     return [];
   }
+
+  if (raw === cachedRaw) {
+    return cachedBookmarks; // nothing changed - return the SAME array reference
+  }
+
+  try {
+    cachedBookmarks = raw ? (JSON.parse(raw) as string[]) : [];
+  } catch {
+    // Corrupted/tampered localStorage should not crash app
+    cachedBookmarks = [];
+  }
+  cachedRaw = raw;
+  return cachedBookmarks;
 }
 
 function writeBookmarks(ids: string[]) {
@@ -33,7 +51,7 @@ function writeBookmarks(ids: string[]) {
   }
 }
 
-// useSyncExternalStore reads external state (localStorage)  synchronously
+// useSyncExternalStore reads external state (localStorage) synchronously
 // during render, and re-renders automatically whenever `subscribe` fires
 function subscribe(callback: () => void) {
   window.addEventListener(BOOKMARKS_CHANGED_EVENT, callback);
@@ -60,6 +78,15 @@ export function useIsBookmarked(articleId: string) {
   }, [articleId]);
 
   return { isBookmarked, toggle };
+}
+
+// Return full list of bookmarked article IDs reactively
+export function useBookmarkedIds(): string[] {
+  return useSyncExternalStore(
+    subscribe,
+    () => readBookmarks(), // now returns a cached, stable reference when unchanged
+    () => [], // server snapshot (SSR has no localStorage)
+  );
 }
 
 export function BookmarkButton({ articleId }: { articleId: string }) {
