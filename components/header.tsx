@@ -13,8 +13,15 @@ export function Header() {
         </Link>
 
         <Link
-          href="/bookmarks"
+          href="/search"
           className="ml-auto text-sm font-medium text-foreground/70 hover:text-foreground"
+        >
+          Suche
+        </Link>
+
+        <Link
+          href="/bookmarks"
+          className="ml-4 text-sm font-medium text-foreground/70 hover:text-foreground"
         >
           Lesezeichen
         </Link>
