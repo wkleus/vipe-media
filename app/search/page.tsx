@@ -29,7 +29,7 @@ export default function SearchPage() {
         </p>
       ) : results.length === 0 ? (
         <p className="text-center text-sm text-foreground/50">
-          Keine Treffer für „{query}".
+          Keine Treffer für &ldquo;{query}&rdquo;.
         </p>
       ) : (
         <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
