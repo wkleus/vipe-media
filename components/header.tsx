@@ -4,7 +4,7 @@ import Link from "next/link";
 export function Header() {
   return (
     <header className="border-b border-border">
-      <div className="mx-auto flex h-16 max-w-6xl items-center px-4">
+      <div className="mx-auto flex h-16 max-w-6xl items-center gap-3 px-4">
         <Link
           href="/"
           className="font-serif text-2xl font-semibold tracking-tight"
@@ -14,14 +14,14 @@ export function Header() {
 
         <Link
           href="/search"
-          className="ml-auto text-sm font-medium text-foreground/70 hover:text-foreground"
+          className="ml-auto text-xs font-medium text-foreground/70 hover:text-foreground sm:text-sm"
         >
           Suche
         </Link>
 
         <Link
           href="/bookmarks"
-          className="ml-4 text-sm font-medium text-foreground/70 hover:text-foreground"
+          className="ml-4 text-xs font-medium text-foreground/70 hover:text-foreground sm:text-sm"
         >
           Lesezeichen
         </Link>
