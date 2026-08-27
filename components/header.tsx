@@ -1,5 +1,6 @@
 // Header with VIPE Media logo, shown on every page
 import Link from "next/link";
+import { ThemeToggle } from "@/components/theme-toggle";
 
 export function Header() {
   return (
@@ -25,6 +26,8 @@ export function Header() {
         >
           Lesezeichen
         </Link>
+
+        <ThemeToggle />
       </div>
     </header>
   );

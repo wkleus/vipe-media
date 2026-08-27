@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@custom-variant dark (&:where(.dark, .dark *));
 
 :root {
   /* Gallery-style palette */
@@ -6,6 +7,13 @@
   --foreground: #171412;
   --accent: #c41e3a;
   --border: #e5e1db;
+}
+
+.dark {
+  --background: #16181c;
+  --foreground: #ebe8e2;
+  --accent: #ff4d6a;
+  --border: #2a2d33;
 }
 
 /* Registers CSS variables as real Tailwind utilities */
