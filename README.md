@@ -24,6 +24,10 @@ Editorial news feed for art and culture, built with React, TypeScript and Next.j
 
 <img src="./docs/screenshots/bookmarks.png" width="650" alt="Bookmarks">
 
+### Dark Mode
+
+<img src="./docs/screenshots/dark-mode.png" width="650" alt="Dark mode">
+
 ## Features (current)
 
 - Article feed with infinite scroll (IntersectionObserver)
@@ -33,6 +37,7 @@ Editorial news feed for art and culture, built with React, TypeScript and Next.j
 - Article detail page with dynamic route
 - Skeleton loading states
 - Custom editorial design: warm paper/ink palette, Fraunces (headlines) + Inter (body), single red accent
+- Dark mode (system preference + manual toggle, via next-themes)
 
 ## Tech Stack
 
@@ -55,11 +60,13 @@ app/
 └── search/page.tsx           Live search
 
 components/
-├── header.tsx                Top bar with logo, search, bookmarks link
+├── header.tsx                Top bar with logo, search, bookmarks link, theme toggle
 ├── article-feed.tsx          Feed logic: filtering + infinite scroll + skeletons
 ├── category-nav.tsx          Category filter bar
 ├── article-card.tsx          Single article card
-└── bookmark-button.tsx       Bookmark toggle button
+├── bookmark-button.tsx       Bookmark toggle button
+├── theme-provider.tsx        next-themes wrapper (client boundary for layout.tsx)
+└── theme-toggle.tsx          Dark mode toggle button
 
 lib/
 ├── mock-data.ts              Placeholder data (NOTE: temporary!)
@@ -87,7 +94,6 @@ database and API layer are connected.
 
 ## Planned Next Steps
 
-- [ ] Dark mode
 - [ ] Backend: Prisma schema, Neon database, NewsAPI integration
 - [ ] Redis caching for API responses
 - [ ] NextAuth.js for real user accounts (server-side bookmarks)
