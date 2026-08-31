@@ -1,0 +1,45 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// Mirrors Category type in lib/mock-data.ts
+enum Category {
+  BILDENDE_KUNST
+  MUSIK
+  FILM
+  LITERATUR
+  FOTOGRAFIE
+  AUSSTELLUNGEN
+  STREETART
+  SONSTIGES
+}
+
+model Article {
+  id          String   @id @default(cuid())
+
+ // NewsAPI doesn't provide stable article ID - the source URL is the only reliable fingerprint
+  url         String   @unique
+
+  title       String
+  description String?  @db.Text
+  content     String?  @db.Text
+
+  imageUrl    String?
+  author      String?
+  sourceName  String
+
+  category    Category @default(SONSTIGES)
+
+  publishedAt DateTime
+  fetchedAt   DateTime @default(now())
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([category, publishedAt(sort: Desc)])
+  @@index([publishedAt(sort: Desc)])
+}
