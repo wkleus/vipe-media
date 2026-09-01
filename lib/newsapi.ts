@@ -4,7 +4,7 @@
 import { Category } from "@prisma/client";
 
 // Types
-interface RawArticle {
+interface NewsApiRawArticle {
   source: { id: string | null; name: string };
   author: string | null;
   title: string;
@@ -13,6 +13,14 @@ interface RawArticle {
   urlToImage: string | null;
   publishedAt: string;
   content: string | null;
+}
+
+interface NewsApiResponse {
+  status: "ok" | "error";
+  totalResults?: number;
+  articles?: NewsApiRawArticle[];
+  code?: string;
+  message?: string;
 }
 
 // Normalized shape - every source (e.g. NewsAPI) maps onto this before it reaches the database
@@ -45,6 +53,7 @@ export class NewsApiError extends Error {
   constructor(
     message: string,
     public statusCode?: number,
+    public readonly apiCode?: string,
   ) {
     super(message);
     this.name = "NewsApiError";
@@ -56,49 +65,67 @@ export async function fetchArticlesByCategory(
   category: Category,
 ): Promise<NormalizedArticle[]> {
   const apiKey = process.env.NEWSAPI_KEY;
-  if (!apiKey) throw new NewsApiError("NEWSAPI_KEY missing");
+  if (!apiKey) {
+    throw new NewsApiError("NEWSAPI_KEY is not set (check .env)");
+  }
 
-  const url = `https://newsapi.org/v2/everything?${new URLSearchParams({
+  const params = new URLSearchParams({
     q: CATEGORY_QUERIES[category],
     language: "de",
     sortBy: "publishedAt",
     pageSize: "20",
     apiKey,
-  })}`;
+  });
 
-  let response;
+  const url = `https://newsapi.org/v2/everything?${params.toString()}`;
+
+  let response: Response;
   try {
     response = await fetch(url, { cache: "no-store" });
   } catch (err) {
-    throw new NewsApiError(`Network error: ${err}`);
-  }
-
-  const data = await response.json();
-
-  if (!response.ok || data.status === "error") {
     throw new NewsApiError(
-      data.message || `HTTP ${response.status}`,
-      response.status,
+      `Network error calling NewsAPI (category: ${category}): ${err instanceof Error ? err.message : String(err)}`,
     );
   }
 
-  return (data.articles ?? [])
-    .filter(
-      (a: RawArticle) =>
-        a.url &&
-        a.title &&
-        a.title !== "[Removed]" &&
-        a.source.name !== "[Removed]",
-    )
-    .map((a: RawArticle) => ({
-      url: a.url,
-      title: a.title,
-      description: a.description,
-      content: a.content,
-      imageUrl: a.urlToImage,
-      author: a.author,
-      sourceName: a.source.name,
-      category,
-      publishedAt: new Date(a.publishedAt),
-    }));
+  const data = (await response.json()) as NewsApiResponse;
+
+  if (!response.ok || data.status === "error") {
+    throw new NewsApiError(
+      data.message ?? `NewsAPI responded with status ${response.status}`,
+      response.status,
+      data.code,
+    );
+  }
+
+  const rawArticles = data.articles ?? [];
+  return rawArticles
+    .filter(isUsableArticle)
+    .map((a) => normalizeArticle(a, category));
+}
+
+function isUsableArticle(a: NewsApiRawArticle): boolean {
+  return (
+    !!a.url &&
+    !!a.title &&
+    a.title !== "[Removed]" &&
+    a.source.name !== "[Removed]"
+  );
+}
+
+function normalizeArticle(
+  a: NewsApiRawArticle,
+  category: Category,
+): NormalizedArticle {
+  return {
+    url: a.url,
+    title: a.title,
+    description: a.description,
+    content: a.content,
+    imageUrl: a.urlToImage,
+    author: a.author,
+    sourceName: a.source.name,
+    category,
+    publishedAt: new Date(a.publishedAt),
+  };
 }
