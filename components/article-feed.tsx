@@ -1,28 +1,41 @@
 // Category filter + article grid with infinite scroll
+// Fetch real data from /api/articles
 
 "use client";
 
 import { startTransition, useEffect, useRef, useState } from "react";
-import { getMockPage, type Article, type Category } from "@/lib/mock-data";
-import { ArticleCard } from "@/components/article-card";
+import type { Category } from "@prisma/client";
+import { ArticleCard, type ArticleCardData } from "@/components/article-card";
 import { CategoryNav } from "@/components/category-nav";
 
 const PAGE_SIZE = 6;
 
-// Artificial delay so loading states are actually visible with mock data -
-// NOTE: remove this once real API calls replace getMockPage!!!
-const MOCK_LATENCY_MS = 500;
+interface ArticlesResponse {
+  items: ArticleCardData[];
+  nextCursor: string | null;
+  hasNextPage: boolean;
+}
 
-function delay(ms: number) {
-  return new Promise((resolve) => setTimeout(resolve, ms));
+async function fetchArticlesPage(
+  category: Category | "ALL",
+  cursor: string | null,
+): Promise<ArticlesResponse> {
+  const params = new URLSearchParams({ limit: String(PAGE_SIZE) });
+  if (category !== "ALL") params.set("category", category);
+  if (cursor) params.set("cursor", cursor);
+
+  const res = await fetch(`/api/articles?${params.toString()}`);
+  if (!res.ok) throw new Error(`Failed to load articles (${res.status})`);
+  return res.json();
 }
 
 export function ArticleFeed() {
   const [category, setCategory] = useState<Category | "ALL">("ALL");
-  const [articles, setArticles] = useState<Article[]>([]);
+  const [articles, setArticles] = useState<ArticleCardData[]>([]);
   const [hasNextPage, setHasNextPage] = useState(true);
   const [isInitialLoading, setIsInitialLoading] = useState(true);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const cursorRef = useRef<string | null>(null);
   const categoryRef = useRef<Category | "ALL">(category);
@@ -41,18 +54,20 @@ export function ArticleFeed() {
       else setIsLoadingMore(true);
     });
 
-    await delay(MOCK_LATENCY_MS);
-
-    const page = getMockPage(
-      categoryRef.current,
-      reset ? null : cursorRef.current,
-      PAGE_SIZE,
-    );
-
-    setArticles((prev) => (reset ? page.items : [...prev, ...page.items]));
-    cursorRef.current = page.nextCursor;
-    hasNextPageRef.current = page.hasNextPage;
-    setHasNextPage(page.hasNextPage);
+    try {
+      const page = await fetchArticlesPage(
+        categoryRef.current,
+        reset ? null : cursorRef.current,
+      );
+      setArticles((prev) => (reset ? page.items : [...prev, ...page.items]));
+      cursorRef.current = page.nextCursor;
+      hasNextPageRef.current = page.hasNextPage;
+      setHasNextPage(page.hasNextPage);
+      setError(null);
+    } catch (err) {
+      console.error("[ArticleFeed] load failed:", err);
+      setError("Artikel konnten nicht geladen werden.");
+    }
 
     setIsInitialLoading(false);
     setIsLoadingMore(false);
@@ -99,7 +114,9 @@ export function ArticleFeed() {
       <CategoryNav active={category} onChange={setCategory} />
 
       <div className="mx-auto max-w-6xl px-4 py-6">
-        {isInitialLoading ? (
+        {error ? (
+          <p className="py-12 text-center text-sm text-accent">{error}</p>
+        ) : isInitialLoading ? (
           <SkeletonGrid count={6} />
         ) : articles.length === 0 ? (
           <p className="py-12 text-center text-sm text-foreground/50">

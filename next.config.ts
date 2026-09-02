@@ -6,6 +6,12 @@ const nextConfig: NextConfig = {
     remotePatterns: [
       {
         protocol: "https",
+        hostname: "**",
+        port: "",
+        pathname: "/**",
+      },
+      {
+        protocol: "http",
         hostname: "picsum.photos", // mock article images
       },
     ],
