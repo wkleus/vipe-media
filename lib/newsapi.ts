@@ -36,16 +36,26 @@ export interface NormalizedArticle {
   publishedAt: Date;
 }
 
-// One search query per category - keywords chosen to match art/
-const CATEGORY_QUERIES: Record<Category, string> = {
-  BILDENDE_KUNST: "Kunst OR Malerei OR Skulptur",
-  MUSIK: "Konzert OR Musikfestival OR Oper",
-  FILM: "Filmfestival OR Kino OR Dokumentarfilm",
-  LITERATUR: "Roman OR Literaturpreis OR Buchmesse",
-  FOTOGRAFIE: "Fotografie OR Fotoausstellung",
-  AUSSTELLUNGEN: "Ausstellung OR Museum OR Galerie",
-  STREETART: "Streetart OR Graffiti OR Urban Art",
-  SONSTIGES: "Kultur",
+// Active fetch categories only (no FOTOGRAFIE, STREETART, SONSTIGES)
+export const FETCH_CATEGORIES: Category[] = [
+  Category.BILDENDE_KUNST,
+  Category.MUSIK,
+  Category.FILM,
+  Category.LITERATUR,
+  Category.AUSSTELLUNGEN,
+];
+
+// One search query per category – tuned by observed quality
+const CATEGORY_QUERIES: Partial<Record<Category, string>> = {
+  BILDENDE_KUNST:
+    '("bildende Kunst" OR Malerei OR Skulptur OR Kunsthalle OR "Neue Nationalgalerie" OR Kunstmuseum) AND NOT (Fußball OR Sport OR Bundesliga OR Politik OR Wahl OR Börse)',
+  MUSIK:
+    '(Oper OR Opernhaus OR Philharmonie OR "klassische Musik" OR Sinfonie OR Dirigent OR "Neue Musik" OR Kammermusik OR Musiktheater) AND NOT (Fußball OR Sport OR Bundesliga OR Politik OR Wahl OR "Konzert der" OR Chart OR TikTok)',
+  FILM: '(Filmfestival OR Dokumentarfilm OR Filmpreis OR Regisseur OR Kinofilm OR Berlinale OR "Deutscher Film") AND NOT (Fußball OR Sport OR Bundesliga OR Politik OR Wahl)',
+  LITERATUR:
+    "(Literaturpreis OR Buchmesse OR Debütroman OR Lyrik OR Schriftsteller OR Verlag OR Romanveröffentlichung) AND NOT (Fußball OR Sport OR Bundesliga OR Politik OR Wahl)",
+  AUSSTELLUNGEN:
+    '(Kunstausstellung OR "Ausstellung im Museum" OR Retrospektive OR Kunstmuseum OR Kunsthalle OR "Galerie zeigt" OR Kurator) AND NOT (Fußball OR Sport OR Bundesliga OR Auto OR Technik OR Naturkunde OR "Deutsches Museum" OR Politik OR Wahl)',
 };
 
 // Error
@@ -69,8 +79,15 @@ export async function fetchArticlesByCategory(
     throw new NewsApiError("NEWSAPI_KEY is not set (check .env)");
   }
 
+  const q = CATEGORY_QUERIES[category];
+  if (!q) {
+    throw new NewsApiError(
+      `No search query configured for category "${category}" (skipped category?)`,
+    );
+  }
+
   const params = new URLSearchParams({
-    q: CATEGORY_QUERIES[category],
+    q,
     language: "de",
     sortBy: "publishedAt",
     pageSize: "20",

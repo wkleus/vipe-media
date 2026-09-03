@@ -1,5 +1,5 @@
-// Article detail page - dynamic route, [id] matches the article's id
-// (e.g. /article/clx9f2k3m0000... renders the article with that cuid from the DB)
+// Article detail page - dynamic route, [id] matches article's id
+// (e.g. /article/clx9f2k3m0000... renders article with that cuid from DB)
 
 import Image from "next/image";
 import Link from "next/link";
@@ -29,12 +29,12 @@ export default async function ArticleDetailPage({
     where: { id },
   });
 
-  // Triggers Next.js' built-in not-found.tsx / 404 page if no article matches
+  // Trigger Next.js' built-in not-found.tsx / 404 page if no article matches
   if (!article) {
     notFound();
   }
 
-  const categoryLabel = CATEGORY_LABELS[article.category];
+  const categoryLabel = CATEGORY_LABELS[article.category] ?? article.category;
   const date = new Date(article.publishedAt).toLocaleString("de-DE", {
     dateStyle: "long",
     timeStyle: "short",
@@ -63,7 +63,7 @@ export default async function ArticleDetailPage({
       </p>
 
       {article.imageUrl && (
-        <div className="relative mt-6 aspect-video w-full overflow-hidden rounded-lg bg-neutral-100">
+        <div className="relative mt-6 aspect-[16/9] w-full overflow-hidden rounded-lg bg-neutral-100">
           <Image
             src={article.imageUrl}
             alt=""

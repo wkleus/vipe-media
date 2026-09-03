@@ -59,7 +59,17 @@ export function ArticleFeed() {
         categoryRef.current,
         reset ? null : cursorRef.current,
       );
-      setArticles((prev) => (reset ? page.items : [...prev, ...page.items]));
+
+      setArticles((prev) => {
+        if (reset) return page.items;
+
+        // Guard against duplicate keys if same page is appended twice
+        // (IntersectionObserver / overlapping loadMore races)
+        const seen = new Set(prev.map((a) => a.id));
+        const unique = page.items.filter((a) => !seen.has(a.id));
+        return [...prev, ...unique];
+      });
+
       cursorRef.current = page.nextCursor;
       hasNextPageRef.current = page.hasNextPage;
       setHasNextPage(page.hasNextPage);

@@ -1,15 +1,14 @@
-// Placeholder data for frontend scaffold (no DB connection yet)
-// The type intentionally mirrors the later Prisma field set 1:1
+// Placeholder data for frontend scaffold and testing
 
 export type Category =
   | "BILDENDE_KUNST" // Fine Arts – painting, sculpture, drawing, printmaking
   | "MUSIK" // Music – compositions, performances, recordings
   | "FILM" // Film – cinema, documentaries, video art
   | "LITERATUR" // Literature – poetry, prose, essays, plays
-  | "FOTOGRAFIE" // Photography – analog, digital, conceptual
+  | "FOTOGRAFIE" // Photography – kept in type for Prisma parity, not shown in UI
   | "AUSSTELLUNGEN" // Exhibitions – curated shows, galleries, museums
-  | "STREETART" // Street art – murals, graffiti, public installations
-  | "SONSTIGES"; // Other – anything not covered above
+  | "STREETART" // Street art – kept in type for Prisma parity, not shown in UI
+  | "SONSTIGES"; // Other – technical fallback, not shown in UI
 
 export interface Article {
   id: string;
@@ -25,16 +24,13 @@ export interface Article {
   isBreaking?: boolean;
 }
 
-// "SONSTIGES" not listed here -> it's a technical fallback value for articles
-// that don't cleanly fit a real category (e.g. when NewsAPI category mapping unclear)
+// Active nav categories only (no FOTOGRAFIE, STREETART, SONSTIGES)
 export const CATEGORIES: { value: Category; label: string }[] = [
   { value: "BILDENDE_KUNST", label: "Bildende Kunst" },
   { value: "MUSIK", label: "Musik" },
   { value: "FILM", label: "Film" },
   { value: "LITERATUR", label: "Literatur" },
-  { value: "FOTOGRAFIE", label: "Fotografie" },
   { value: "AUSSTELLUNGEN", label: "Ausstellungen" },
-  { value: "STREETART", label: "Streetart" },
 ];
 
 function makeArticle(
@@ -61,7 +57,7 @@ function makeArticle(
   };
 }
 
-// Mock articles spread across all categories for testing purposes (placeholder data)
+// Mock articles for remaining active categories
 export const MOCK_ARTICLES: Article[] = [
   makeArticle(
     1,
@@ -93,25 +89,11 @@ export const MOCK_ARTICLES: Article[] = [
     75,
   ),
   makeArticle(
-    5,
-    "Fotoband dokumentiert drei Jahrzehnte Stadtwandel",
-    "FOTOGRAFIE",
-    "Photonews",
-    95,
-  ),
-  makeArticle(
     6,
     "Große Sonderausstellung zu impressionistischer Malerei",
     "AUSSTELLUNGEN",
     "Art Magazin",
     120,
-  ),
-  makeArticle(
-    7,
-    "Street-Art-Festival verwandelt Industriebrache",
-    "STREETART",
-    "Juxtapoz",
-    140,
   ),
   makeArticle(
     8,
@@ -150,20 +132,6 @@ export const MOCK_ARTICLES: Article[] = [
     240,
   ),
   makeArticle(
-    13,
-    "Streetart-Künstler gestaltet Fassade eines Kulturzentrums",
-    "STREETART",
-    "Widewalls",
-    260,
-  ),
-  makeArticle(
-    14,
-    "Fotografie-Preis würdigt dokumentarisches Langzeitprojekt",
-    "FOTOGRAFIE",
-    "1854",
-    280,
-  ),
-  makeArticle(
     15,
     "Neue Konzerthalle eröffnet mit gefeierter Akustik",
     "MUSIK",
@@ -197,13 +165,6 @@ export const MOCK_ARTICLES: Article[] = [
     "FILM",
     "Indiewire",
     380,
-  ),
-  makeArticle(
-    20,
-    "Ausstellung vereint analoge und digitale Fotografie",
-    "FOTOGRAFIE",
-    "Photonews",
-    400,
   ),
 ];
 

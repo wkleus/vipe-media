@@ -13,7 +13,7 @@ export interface ArticleCardData {
   imageUrl: string | null;
   sourceName: string;
   category: Category;
-  publishedAt: string; // ISO string, as returned by the API (JSON has no Date type)
+  publishedAt: string; // ISO string, as returned by API (JSON has no Date type)
 }
 
 const CATEGORY_LABELS: Record<Category, string> = {
@@ -33,7 +33,7 @@ export function ArticleCard({ article }: { article: ArticleCardData }) {
       href={`/article/${article.id}`}
       className="block overflow-hidden rounded-lg border border-border hover:border-foreground/30 transition-colors"
     >
-      <div className="relative aspect-16/10 w-full bg-foreground/5">
+      <div className="relative aspect-[16/10] w-full bg-foreground/5">
         <Image
           src={article.imageUrl || "/placeholder.jpg"}
           alt=""
@@ -45,7 +45,7 @@ export function ArticleCard({ article }: { article: ArticleCardData }) {
       </div>
       <div className="p-4">
         <span className="text-xs font-medium uppercase tracking-wide text-accent">
-          {CATEGORY_LABELS[article.category]}
+          {CATEGORY_LABELS[article.category] ?? article.category}
         </span>
         <h3 className="mt-1 font-serif text-lg font-semibold leading-snug">
           {article.title}

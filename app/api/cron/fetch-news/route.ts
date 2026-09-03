@@ -1,11 +1,10 @@
-// Fetch articles for every category from NewsAPI and saves them to database
-// NOTE: Call this manually in browser for now: http://localhost:3000/api/cron/fetch-news)
-// -> scheduled cron trigger comes later
+// Fetch articles for active culture categories from NewsAPI and saves them to database
 
 import { NextResponse } from "next/server";
 import { Category } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import {
+  FETCH_CATEGORIES,
   fetchArticlesByCategory,
   NewsApiError,
   type NormalizedArticle,
@@ -24,8 +23,8 @@ interface CategoryResult {
 export async function GET() {
   const results: CategoryResult[] = [];
 
-  // Sequential, not parallel: NewsAPI's free tier has tight rate limit, so we avoid bursting all 8 requests at once
-  for (const category of Object.values(Category)) {
+  // Sequential, not parallel: NewsAPI's free tier has tight rate limit
+  for (const category of FETCH_CATEGORIES) {
     try {
       const articles = await fetchArticlesByCategory(category);
       const saved = await saveArticles(articles);

@@ -10,6 +10,15 @@ import { prisma } from "@/lib/prisma";
 const DEFAULT_LIMIT = 20;
 const MAX_LIMIT = 50;
 
+// "Alle" and search without category: only active culture categories
+const CULTURE_CATEGORIES: Category[] = [
+  Category.BILDENDE_KUNST,
+  Category.MUSIK,
+  Category.FILM,
+  Category.LITERATUR,
+  Category.AUSSTELLUNGEN,
+];
+
 export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams;
 
@@ -24,6 +33,13 @@ export async function GET(request: NextRequest) {
     if (!Object.values(Category).includes(categoryParam as Category)) {
       return NextResponse.json(
         { error: `Invalid category "${categoryParam}"` },
+        { status: 400 },
+      );
+    }
+    // Reject inactive categories explicitly
+    if (!CULTURE_CATEGORIES.includes(categoryParam as Category)) {
+      return NextResponse.json(
+        { error: `Category "${categoryParam}" is not available` },
         { status: 400 },
       );
     }
@@ -43,9 +59,9 @@ export async function GET(request: NextRequest) {
     limit = Math.min(parsed, MAX_LIMIT);
   }
 
-  // Build filters: category + simple text search on title/description
+  // Build filters: category + text search on title/description
   const where: Prisma.ArticleWhereInput = {
-    ...(category ? { category } : {}),
+    category: category ? category : { in: CULTURE_CATEGORIES },
     ...(query
       ? {
           OR: [
@@ -61,7 +77,7 @@ export async function GET(request: NextRequest) {
     const articles = await prisma.article.findMany({
       where,
       orderBy: { publishedAt: "desc" },
-      take: limit + 1, // fetch one extra to know if there's a next page
+      take: limit + 1,
       ...(cursor ? { cursor: { id: cursor }, skip: 1 } : {}),
       select: {
         id: true,
