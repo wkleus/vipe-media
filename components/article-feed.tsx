@@ -9,6 +9,7 @@ import { ArticleCard, type ArticleCardData } from "@/components/article-card";
 import { CategoryNav } from "@/components/category-nav";
 
 const PAGE_SIZE = 6;
+const CULTURE_CATEGORY_COUNT = 5; // Bildende Kunst, Musik, Film, Literatur, Ausstellungen
 
 interface ArticlesResponse {
   items: ArticleCardData[];
@@ -43,6 +44,12 @@ export function ArticleFeed() {
   const isLoadingRef = useRef(false); // guards against overlapping loads
   const isSentinelVisibleRef = useRef(false);
   const sentinelRef = useRef<HTMLDivElement>(null);
+
+  const edition = new Intl.DateTimeFormat("de-DE", {
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+  }).format(new Date());
 
   async function loadMore(reset: boolean) {
     if (isLoadingRef.current) return;
@@ -121,6 +128,36 @@ export function ArticleFeed() {
 
   return (
     <div>
+      <header className="relative overflow-hidden border-b border-border">
+        <div
+          className="pointer-events-none absolute inset-0 opacity-[0.4]"
+          style={{
+            backgroundImage:
+              "repeating-linear-gradient(115deg, var(--accent) 0px, var(--accent) 1px, transparent 1px, transparent 64px)",
+            maskImage: "linear-gradient(to bottom, black, transparent)",
+          }}
+        />
+        <div className="relative mx-auto flex max-w-6xl flex-col gap-6 px-4 py-10 sm:flex-row sm:items-end sm:justify-between">
+          <h1 className="max-w-xl font-serif text-[2.75rem] font-semibold leading-[0.95] tracking-tight sm:text-6xl">
+            Kultur,
+            <br />
+            die bewegt.
+          </h1>
+
+          <div className="flex items-center gap-4 sm:flex-col sm:items-end sm:gap-1 sm:text-right">
+            <span className="h-10 w-px bg-border sm:h-auto sm:w-10 sm:border-t sm:border-l-0" />
+            <div>
+              <p className="font-serif text-sm italic text-foreground/70">
+                {edition}
+              </p>
+              <p className="text-xs text-foreground/45">
+                {CULTURE_CATEGORY_COUNT} Rubriken, täglich aktualisiert
+              </p>
+            </div>
+          </div>
+        </div>
+      </header>
+
       <CategoryNav active={category} onChange={setCategory} />
 
       <div className="mx-auto max-w-6xl px-4 py-6">
