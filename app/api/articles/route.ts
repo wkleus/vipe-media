@@ -1,5 +1,3 @@
-// GET /api/articles?category=FILM&cursor=<articleId>&limit=20&q=suchbegriff
-//
 // Cursor pagination: use last article ID as cursor
 // Prevent duplicates or skipped items when new articles are added while scrolling
 
@@ -59,18 +57,25 @@ export async function GET(request: NextRequest) {
     limit = Math.min(parsed, MAX_LIMIT);
   }
 
-  // Build filters: category + text search on title/description
-  const where: Prisma.ArticleWhereInput = {
-    category: category ? category : { in: CULTURE_CATEGORIES },
-    ...(query
-      ? {
-          OR: [
-            { title: { contains: query, mode: "insensitive" } },
-            { description: { contains: query, mode: "insensitive" } },
-          ],
-        }
-      : {}),
-  };
+  const idsParam = searchParams.get("ids");
+
+  // Build filters: category + text search on title/description.
+  // "ids" lookup (used by the bookmarks page) bypasses category filtering
+  // entirely - a bookmarked article should always be shown, even if its
+  // category isn't part of CULTURE_CATEGORIES.
+  const where: Prisma.ArticleWhereInput = idsParam
+    ? { id: { in: idsParam.split(",").filter(Boolean) } }
+    : {
+        category: category ? category : { in: CULTURE_CATEGORIES },
+        ...(query
+          ? {
+              OR: [
+                { title: { contains: query, mode: "insensitive" } },
+                { description: { contains: query, mode: "insensitive" } },
+              ],
+            }
+          : {}),
+      };
 
   try {
     // Fetch one extra item to check if there's a next page
