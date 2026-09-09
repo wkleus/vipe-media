@@ -1,6 +1,6 @@
 // Fetch articles for active culture categories from NewsAPI and saves them to database
 
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { Category } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import {
@@ -20,7 +20,13 @@ interface CategoryResult {
   error?: string;
 }
 
-export async function GET() {
+export async function GET(request: NextRequest) {
+  // Vercel Cron automatically sends Authorization: Bearer <CRON_SECRET>
+  const authHeader = request.headers.get("authorization");
+  if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
   const results: CategoryResult[] = [];
 
   // Sequential, not parallel: NewsAPI's free tier has tight rate limit
