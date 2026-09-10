@@ -2,56 +2,56 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import { Eye, EyeOff, Loader2 } from "lucide-react";
-
-// ----- NOTE: DEMO: simulates the actual NextAuth call -----
-// For testing purposes: If "error" is entered as the password -> error state
-function fakeLogin(email: string, password: string): Promise<{ ok: boolean }> {
-  return new Promise((resolve) => {
-    setTimeout(() => resolve({ ok: password.toLowerCase() !== "error" }), 900);
-  });
-}
-// -----
+import { Loader2 } from "lucide-react";
+import { FormMessage } from "@/components/auth/form-message";
+import { PasswordField, TextField } from "@/components/auth/fields";
+import { fakeLogin } from "@/lib/mock-auth";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
+  // Submit gating: fields must be filled, no double-submit while loading/after success
+  // NOTE: No min-length check here - login must not enforce register password rules
+  const canSubmit =
+    email.trim().length > 0 && password.length > 0 && !isLoading && !success;
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    if (!canSubmit) return;
+
     setError(null);
     setSuccess(false);
     setIsLoading(true);
 
-    const res = await fakeLogin(email, password);
+    const res = await fakeLogin(email.trim(), password);
 
     setIsLoading(false);
     if (!res.ok) {
       setError("E-Mail oder Passwort ist falsch.");
     } else {
-      setSuccess(true); // NOTE: Demo: this is where `router.push("/")` would go later
+      setSuccess(true); // NOTE: Demo: real version would redirect to "/" here
     }
   }
 
-  const inputClass =
-    "w-full rounded-lg border border-border bg-transparent px-3 py-2 text-sm focus:border-accent focus:outline-none";
-
   return (
     <div className="flex min-h-[calc(100dvh-4rem)] items-center justify-center px-4 py-12">
-      <div className="w-full max-w-sm">
+      <div className="animate-fade-up w-full max-w-sm">
         <Link
           href="/"
           className="block text-center text-2xl font-bold tracking-tight"
         >
           VIPE<span className="text-accent">Media</span>
         </Link>
+        <p className="mt-1 text-center text-[11px] uppercase tracking-[0.25em] text-foreground/40">
+          Kunst · Kultur · KI
+        </p>
 
-        <h1 className="mt-6 text-center font-serif text-2xl font-semibold">
-          Anmelden
+        <h1 className="mt-8 text-center font-serif text-2xl font-semibold">
+          Willkommen zurück
         </h1>
         <p className="mt-1 text-center text-sm text-foreground/60">
           Noch kein Konto?{" "}
@@ -61,71 +61,40 @@ export default function LoginPage() {
         </p>
 
         <form onSubmit={handleSubmit} className="mt-8 space-y-4">
-          <div>
-            <label
-              htmlFor="email"
-              className="mb-1.5 block text-sm text-foreground/60"
-            >
-              E-Mail
-            </label>
-            <input
-              id="email"
-              type="email"
-              required
-              autoComplete="email"
-              placeholder="du@beispiel.de"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className={inputClass}
-            />
-          </div>
+          <TextField
+            id="email"
+            type="email"
+            required
+            autoComplete="email"
+            placeholder="du@beispiel.de"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            label="E-Mail"
+          />
 
-          <div>
-            <label
-              htmlFor="password"
-              className="mb-1.5 block text-sm text-foreground/60"
-            >
-              Passwort
-            </label>
-            <div className="relative">
-              <input
-                id="password"
-                type={showPassword ? "text" : "password"}
-                required
-                autoComplete="current-password"
-                placeholder="••••••••"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className={`${inputClass} pr-10`}
-              />
-              <button
-                type="button"
-                onClick={() => setShowPassword((v) => !v)}
-                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-foreground/40 hover:text-foreground/70"
-                aria-label={
-                  showPassword ? "Passwort verbergen" : "Passwort anzeigen"
-                }
+          <PasswordField
+            value={password}
+            onChange={setPassword}
+            labelExtra={
+              <Link
+                href="#"
+                className="text-xs text-foreground/40 hover:text-accent hover:underline"
               >
-                {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
-              </button>
-            </div>
-          </div>
+                Vergessen?
+              </Link>
+            }
+          />
 
-          {error && (
-            <p className="rounded-lg border border-accent/30 bg-accent/10 px-3 py-2 text-sm text-accent">
-              {error}
-            </p>
-          )}
+          {error && <FormMessage type="error">{error}</FormMessage>}
           {success && (
-            <p className="rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-3 py-2 text-sm text-emerald-500">
-              ✓ Anmeldung erfolgreich (Demo – hier würde es zur Startseite
-              gehen)
-            </p>
+            <FormMessage type="success">
+              Anmeldung erfolgreich (Demo)
+            </FormMessage>
           )}
 
           <button
             type="submit"
-            disabled={isLoading}
+            disabled={!canSubmit}
             className="flex w-full items-center justify-center gap-2 rounded-lg bg-accent py-2.5 text-sm font-medium text-white transition-opacity hover:opacity-90 disabled:opacity-60"
           >
             {isLoading && <Loader2 size={16} className="animate-spin" />}
