@@ -1,6 +1,7 @@
 // Header with VIPE Media logo, shown on every page
 import Link from "next/link";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { UserMenu } from "@/components/auth/user-menu";
 
 export function Header() {
   return (
@@ -12,22 +13,23 @@ export function Header() {
         >
           VIPE <span className="text-accent">Media</span>
         </Link>
-
         <Link
           href="/search"
           className="ml-auto text-xs font-medium text-foreground/70 hover:text-foreground sm:text-sm"
         >
           Suche
         </Link>
-
         <Link
           href="/bookmarks"
           className="ml-4 text-xs font-medium text-foreground/70 hover:text-foreground sm:text-sm"
         >
           Lesezeichen
         </Link>
-
         <ThemeToggle />
+
+        <div className="h-5 w-px bg-border" />
+
+        <UserMenu />
       </div>
     </header>
   );
