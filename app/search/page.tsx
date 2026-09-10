@@ -41,7 +41,7 @@ export default function SearchPage() {
   }, [query]);
 
   return (
-    <main className="mx-auto max-w-6xl px-4 py-8">
+    <div className="mx-auto w-full flex-1 max-w-6xl px-4 py-8">
       <div className="mx-auto mb-8 max-w-xl">
         <input
           autoFocus
@@ -70,6 +70,6 @@ export default function SearchPage() {
           ))}
         </div>
       )}
-    </main>
+    </div>
   );
 }
