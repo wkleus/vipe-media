@@ -8,9 +8,9 @@ const PRODUCT_LINKS = [
 ];
 
 const LEGAL_LINKS = [
-  { label: "Impressum", href: "#" }, // NOTE: create later!
-  { label: "Datenschutz", href: "#" }, // NOTE: required once user accounts exist (GDPR)
-  { label: "AGB", href: "#" }, // NOTE: required for the paid premium tier
+  { label: "Impressum", href: "/imprint" },
+  { label: "Datenschutz", href: "/datenschutz" },
+  { label: "AGB", href: "/agb" },
 ];
 
 function FooterColumn({
