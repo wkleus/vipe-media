@@ -9,7 +9,7 @@ const PRODUCT_LINKS = [
 
 const LEGAL_LINKS = [
   { label: "Impressum", href: "/imprint" },
-  { label: "Datenschutz", href: "/datenschutz" },
+  { label: "Datenschutz", href: "/privacy-policy" },
   { label: "AGB", href: "/terms-of-service" },
 ];
 
