@@ -10,7 +10,7 @@ const PRODUCT_LINKS = [
 const LEGAL_LINKS = [
   { label: "Impressum", href: "/imprint" },
   { label: "Datenschutz", href: "/datenschutz" },
-  { label: "AGB", href: "/agb" },
+  { label: "AGB", href: "/terms-of-service" },
 ];
 
 function FooterColumn({

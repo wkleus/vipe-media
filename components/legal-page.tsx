@@ -41,7 +41,8 @@ export function LegalPage({
           Dieses Webprojekt ist ein nicht‑kommerzielles Template und wird nicht
           geschäftsmäßig betrieben. Es stellt kein dauerhaft betriebenes oder
           öffentlich relevantes Angebot dar und fällt daher nicht unter die
-          Impressumspflicht. Die Angaben sind Platzhalter.
+          Impressumspflicht. Diese Seite dient lediglich als Template; Angaben
+          in eckigen Klammern sind Platzhalter.
         </div>
 
         {children}
