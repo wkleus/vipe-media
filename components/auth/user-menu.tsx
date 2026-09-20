@@ -1,13 +1,10 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { Bookmark, ChevronDown, CreditCard, LogOut } from "lucide-react";
-
-// NOTE: DEMO: flip this to preview the logged-in state
-// Later: const { data: session } = useSession();
-//        const isLoggedIn = !!session?.user;
-const isLoggedIn = false; // NOTE: demo only
+import { signOut, useSession } from "@/lib/auth-client";
 
 // Logged-out: compact login link + register CTA
 function AuthButtons() {
@@ -31,6 +28,7 @@ function AuthButtons() {
 
 // Logged-in: avatar + dropdown menu
 function UserDropdown({ name }: { name: string }) {
+  const router = useRouter();
   const [open, setOpen] = useState(false);
 
   // Extract first letter for the avatar fallback
@@ -40,6 +38,12 @@ function UserDropdown({ name }: { name: string }) {
     { icon: Bookmark, label: "Lesezeichen", href: "/bookmarks" },
     { icon: CreditCard, label: "Abo verwalten", href: "/account" }, // later: billing portal
   ];
+
+  async function handleLogout() {
+    setOpen(false);
+    await signOut();
+    router.refresh();
+  }
 
   return (
     <div className="relative">
@@ -94,11 +98,7 @@ function UserDropdown({ name }: { name: string }) {
             <button
               type="button"
               role="menuitem"
-              onClick={() => {
-                setOpen(false);
-                // NOTE: Later: signOut() from next-auth/react
-                console.log("[demo] logout");
-              }}
+              onClick={handleLogout}
               className="flex w-full items-center gap-2.5 px-3.5 py-2 text-sm text-foreground/70 transition-colors hover:bg-foreground/5 hover:text-foreground"
             >
               <LogOut size={15} />
@@ -113,8 +113,18 @@ function UserDropdown({ name }: { name: string }) {
 
 // Public API: swap into header
 export function UserMenu() {
-  // Later: const name = session?.user?.name ?? session?.user?.email ?? "";
-  const name = "Max Mustermann"; // demo only
+  const { data: session, isPending } = useSession();
 
-  return isLoggedIn ? <UserDropdown name={name} /> : <AuthButtons />;
+  // While the session is still resolving, render nothing to avoid a
+  // flash of the logged-out state for users who are actually logged in
+  if (isPending) {
+    return <div className="h-8 w-8" aria-hidden />;
+  }
+
+  if (!session?.user) {
+    return <AuthButtons />;
+  }
+
+  const name = session.user.name || session.user.email;
+  return <UserDropdown name={name} />;
 }
