@@ -1,14 +1,16 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { Loader2 } from "lucide-react";
 import { EditorialPanel } from "@/components/auth/editorial-panel";
 import { FormMessage } from "@/components/auth/form-message";
 import { PasswordField, TextField } from "@/components/auth/fields";
-import { fakeRegister } from "@/lib/mock-auth";
+import { signUp } from "@/lib/auth-client";
 
 export default function RegisterPage() {
+  const router = useRouter();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -31,22 +33,28 @@ export default function RegisterPage() {
     setSuccessMessage(null);
     setIsLoading(true);
 
-    const res = await fakeRegister({
-      name: name.trim(),
+    const trimmedName = name.trim();
+    const { error: signUpError } = await signUp.email({
+      name: trimmedName || email.trim(),
       email: email.trim(),
       password,
     });
 
     setIsLoading(false);
-    if (!res.ok) {
-      setError(res.error ?? "Registrierung fehlgeschlagen.");
-    } else {
-      // Demo: real version would auto-login (signIn) + redirect to "/" or /onboarding
-      setSuccessMessage(
-        res.name
-          ? `Konto erstellt – willkommen, ${res.name}! (Demo)`
-          : "Konto erstellt (Demo – hier würde der Auto-Login starten)",
+    if (signUpError) {
+      setError(
+        signUpError.status === 422
+          ? "Diese E-Mail ist bereits registriert."
+          : (signUpError.message ?? "Registrierung fehlgeschlagen."),
       );
+    } else {
+      // Better Auth signs the user in automatically on successful sign-up
+      setSuccessMessage(
+        trimmedName
+          ? `Konto erstellt – willkommen, ${trimmedName}!`
+          : "Konto erstellt!",
+      );
+      router.push("/");
     }
   }
 

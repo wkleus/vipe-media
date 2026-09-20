@@ -1,13 +1,15 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { Loader2 } from "lucide-react";
 import { FormMessage } from "@/components/auth/form-message";
 import { PasswordField, TextField } from "@/components/auth/fields";
-import { fakeLogin } from "@/lib/mock-auth";
+import { signIn } from "@/lib/auth-client";
 
 export default function LoginPage() {
+  const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -27,13 +29,17 @@ export default function LoginPage() {
     setSuccess(false);
     setIsLoading(true);
 
-    const res = await fakeLogin(email.trim(), password);
+    const { error: signInError } = await signIn.email({
+      email: email.trim(),
+      password,
+    });
 
     setIsLoading(false);
-    if (!res.ok) {
+    if (signInError) {
       setError("E-Mail oder Passwort ist falsch.");
     } else {
-      setSuccess(true); // NOTE: Demo: real version would redirect to "/" here
+      setSuccess(true);
+      router.push("/");
     }
   }
 
@@ -87,9 +93,7 @@ export default function LoginPage() {
 
           {error && <FormMessage type="error">{error}</FormMessage>}
           {success && (
-            <FormMessage type="success">
-              Anmeldung erfolgreich (Demo)
-            </FormMessage>
+            <FormMessage type="success">Anmeldung erfolgreich</FormMessage>
           )}
 
           <button
