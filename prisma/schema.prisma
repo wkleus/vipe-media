@@ -42,20 +42,23 @@ model Article {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  bookmarks Bookmark[]
+
   @@index([category, publishedAt(sort: Desc)])
   @@index([publishedAt(sort: Desc)])
 }
 
 model User {
-  id            String    @id
+  id            String     @id
   name          String
   email         String
-  emailVerified Boolean   @default(false)
+  emailVerified Boolean    @default(false)
   image         String?
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
   sessions      Session[]
   accounts      Account[]
+  bookmarks     Bookmark[]
 
   @@unique([email])
   @@map("user")
@@ -107,4 +110,22 @@ model Verification {
 
   @@index([identifier])
   @@map("verification")
+}
+
+model Bookmark {
+  id String @id @default(cuid())
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  articleId String
+  article   Article @relation(fields: [articleId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  // One bookmark per user+article, and fast lookup of "is this bookmarked"
+  @@unique([userId, articleId])
+  // Fast lookup of "all of this user's bookmarks", newest first (bookmarks page)
+  @@index([userId, createdAt(sort: Desc)])
+  @@map("bookmark")
 }
