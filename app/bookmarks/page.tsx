@@ -1,6 +1,7 @@
 // Bookmarks overview page - shows all articles the user has bookmarked.
-// Bookmark IDs live in localStorage (see bookmark-button.tsx); the actual
-// article data is fetched from the database via /api/articles?ids=...
+// Bookmark IDs come from the Bookmark table via /api/bookmarks (see
+// bookmark-button.tsx); the actual article data is then fetched from
+// the database via /api/articles?ids=...
 
 "use client";
 
@@ -8,8 +9,11 @@ import { startTransition, useEffect, useState } from "react";
 import Link from "next/link";
 import { ArticleCard, type ArticleCardData } from "@/components/article-card";
 import { useBookmarkedIds } from "@/components/bookmark-button";
+import { useSession } from "@/lib/auth-client";
 
 export default function BookmarksPage() {
+  const { data: session, isPending: isSessionPending } = useSession();
+  const isLoggedIn = !!session?.user;
   const bookmarkedIds = useBookmarkedIds();
   const [articles, setArticles] = useState<ArticleCardData[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -43,8 +47,22 @@ export default function BookmarksPage() {
         Deine Lesezeichen
       </h1>
 
-      {isLoading ? (
+      {isLoading || isSessionPending ? (
         <p className="text-center text-sm text-foreground/50">Wird geladen…</p>
+      ) : !isLoggedIn ? (
+        <div className="flex flex-col items-center gap-2 py-20 text-center">
+          <p className="font-serif text-lg">Melde dich an</p>
+          <p className="mb-4 text-sm text-foreground/50">
+            Lesezeichen sind an dein Konto gebunden - melde dich an, um sie zu
+            sehen.
+          </p>
+          <Link
+            href="/login"
+            className="text-sm font-medium text-accent hover:underline"
+          >
+            Zum Login
+          </Link>
+        </div>
       ) : articles.length === 0 ? (
         <div className="flex flex-col items-center gap-2 py-20 text-center">
           <p className="font-serif text-lg">Noch keine Lesezeichen</p>
