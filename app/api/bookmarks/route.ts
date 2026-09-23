@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { checkRateLimit } from "@/lib/rate-limit";
 
 // GET: all article IDs the current user has bookmarked
 // Used to hydrate bookmark-button.tsx's initial state and to populate
@@ -46,6 +47,22 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(
       { error: "articleId is required" },
       { status: 400 },
+    );
+  }
+
+  // Already gated behind a valid session, so this isn't guarding against
+  // anonymous abuse - just against a single account hammering the toggle
+  // (accidental double-clicks amplified by a buggy client, or deliberate
+  // spam); generous limit, since normal usage can toggle several
+  // bookmarks in quick succession while browsing
+  const allowed = checkRateLimit(`bookmarks:${session.user.id}`, {
+    windowMs: 60_000,
+    max: 10,
+  });
+  if (!allowed) {
+    return NextResponse.json(
+      { error: "Too many requests, please slow down." },
+      { status: 429 },
     );
   }
 
