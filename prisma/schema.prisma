@@ -124,8 +124,18 @@ model Bookmark {
   createdAt DateTime @default(now())
 
   // One bookmark per user+article, and fast lookup of "is this bookmarked"
-  @@unique([userId, articleId])
   // Fast lookup of "all of this user's bookmarks", newest first (bookmarks page)
+  @@unique([userId, articleId])
   @@index([userId, createdAt(sort: Desc)])
   @@map("bookmark")
+}
+
+model RateLimit {
+  id          String @id
+  key         String
+  count       Int
+  lastRequest BigInt
+
+  @@unique([key])
+  @@map("rateLimit")
 }

@@ -22,4 +22,17 @@ export const auth = betterAuth({
   emailAndPassword: {
     enabled: true,
   },
+  // Login/register are prime brute-force/spam targets, and Better Auth doesn't rate-limit by default;
+  // "database" storage reuses our existing Postgres via Prisma; global default stays loose;
+  // sign-in/sign-up get tighter, endpoint-specific limits since those are the actual abuse targets
+  rateLimit: {
+    enabled: true,
+    window: 60,
+    max: 100,
+    storage: "database",
+    customRules: {
+      "/sign-in/email": { window: 60, max: 5 },
+      "/sign-up/email": { window: 60, max: 3 },
+    },
+  },
 });
