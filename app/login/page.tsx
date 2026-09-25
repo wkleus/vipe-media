@@ -36,7 +36,11 @@ export default function LoginPage() {
 
     setIsLoading(false);
     if (signInError) {
-      setError("E-Mail oder Passwort ist falsch.");
+      setError(
+        signInError.status === 403
+          ? "Bitte bestätige zuerst deine E-Mail-Adresse (Link in der E-Mail, die wir dir bei der Registrierung geschickt haben)."
+          : "E-Mail oder Passwort ist falsch.",
+      );
     } else {
       setSuccess(true);
       router.push("/");

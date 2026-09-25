@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { Loader2 } from "lucide-react";
 import { EditorialPanel } from "@/components/auth/editorial-panel";
@@ -10,7 +9,6 @@ import { PasswordField, TextField } from "@/components/auth/fields";
 import { signUp } from "@/lib/auth-client";
 
 export default function RegisterPage() {
-  const router = useRouter();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -48,13 +46,12 @@ export default function RegisterPage() {
           : (signUpError.message ?? "Registrierung fehlgeschlagen."),
       );
     } else {
-      // Better Auth signs the user in automatically on successful sign-up
+      // Sign-in is blocked until the email is verified (requireEmailVerification
+      // in lib/auth.ts), so no auto-login/redirect here anymore - the user
+      // has to click the link in the verification email first
       setSuccessMessage(
-        trimmedName
-          ? `Konto erstellt – willkommen, ${trimmedName}!`
-          : "Konto erstellt!",
+        "Fast geschafft! Wir haben dir eine E-Mail geschickt - bitte bestätige deine Adresse, um dein Konto zu aktivieren.",
       );
-      router.push("/");
     }
   }
 

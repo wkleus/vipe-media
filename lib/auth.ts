@@ -1,6 +1,9 @@
 import { betterAuth } from "better-auth";
 import { prismaAdapter } from "better-auth/adapters/prisma";
+import { Resend } from "resend";
 import { prisma } from "@/lib/prisma";
+
+const resend = new Resend(process.env.RESEND_API_KEY);
 
 export const auth = betterAuth({
   // Object form instead of a single string: the app is reachable under
@@ -21,6 +24,33 @@ export const auth = betterAuth({
   }),
   emailAndPassword: {
     enabled: true,
+    // Sign-in is blocked until the address is verified (see
+    // emailVerification below) -> without this, "enabled: true" alone
+    // would let anyone register with an email they don't own
+    requireEmailVerification: true,
+  },
+  emailVerification: {
+    sendOnSignUp: true,
+    // Once verified via the emailed link, log the user straight in
+    // instead of sending them back to /login to sign in again
+    autoSignInAfterVerification: true,
+    sendVerificationEmail: async ({ user, url }) => {
+      const { error: sendError } = await resend.emails.send({
+        from: "VIPE Media <noreply@vipemedia.pixelstack.me>",
+        to: user.email,
+        subject: "Bestätige deine E-Mail-Adresse",
+        html: `<p>Hallo${user.name ? ` ${user.name}` : ""},</p>
+<p>bitte bestätige deine E-Mail-Adresse, um dein VIPE-Media-Konto zu aktivieren:</p>
+<p><a href="${url}">E-Mail-Adresse bestätigen</a></p>
+<p>Falls du dich nicht registriert hast, kannst du diese E-Mail ignorieren.</p>`,
+      });
+      // The Resend SDK returns { data, error } instead of throwing, so a
+      // failure here would otherwise pass silently - sign-up would still
+      // succeed with a 200, but no email (and no dashboard log entry)
+      if (sendError) {
+        console.error("[auth] Failed to send verification email:", sendError);
+      }
+    },
   },
   // Login/register are prime brute-force/spam targets, and Better Auth doesn't rate-limit by default;
   // "database" storage reuses our existing Postgres via Prisma; global default stays loose;
