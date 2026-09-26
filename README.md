@@ -43,13 +43,15 @@ Editorial news feed for art and culture, built with React, TypeScript and Next.j
 ### Accounts & Bookmarks
 
 - Email/password accounts via Better Auth
+- Sign-up requires email verification (Resend-delivered link) before sign-in is allowed
+- Self-service password reset ("Forgot password?" on the login page), also via a Resend-delivered link
 - Bookmarks are tied to your account (stored in Postgres), not just the browser — toggle a bookmark, see it on any device you log into
 - Logged-out visitors can still see the bookmark button; clicking it shows an inline "please log in" hint instead of a redirect, so they stay in reading context
 - `/account` is a protected route (session-checked server-side)
 
 ### Security
 
-- Rate limiting on sign-in/sign-up (Better Auth's built-in limiter, Postgres-backed) to curb credential stuffing and mass fake-account creation
+- Rate limiting on sign-in/sign-up/password-reset (Better Auth's built-in limiter, Postgres-backed) to curb credential stuffing, mass fake-account creation, and reset-link spam
 - Separate, lightweight in-memory rate limiting on the bookmarks endpoint
 - Kept on a patched Next.js version (a pre-auth RCE affecting earlier 16.x releases is fixed)
 
@@ -67,6 +69,7 @@ Editorial news feed for art and culture, built with React, TypeScript and Next.j
 - **lucide-react** for icons
 - **PostgreSQL** (Neon), accessed via **Prisma 7** with the `@prisma/adapter-neon` driver adapter
 - **Better Auth** for email/password accounts, sessions, and rate limiting
+- **Resend** for verification and password-reset emails
 - **NewsAPI** for article ingestion, via a Vercel Cron-triggered endpoint
 - `@upstash/redis` is installed for future use, not currently wired up
 
@@ -82,6 +85,8 @@ app/
 ├── search/page.tsx                 Live search
 ├── login/page.tsx                  Login
 ├── register/page.tsx               Registration
+├── forgot-password/page.tsx        Request a password reset link
+├── reset-password/page.tsx         Set a new password (via emailed token)
 ├── account/page.tsx                Protected account page (session-checked)
 ├── imprint/page.tsx                Legal: imprint
 ├── privacy-policy/page.tsx         Legal: privacy policy
@@ -109,8 +114,8 @@ components/
     └── form-message.tsx             Shared success/error message component
 
 lib/
-├── auth.ts                         Better Auth server config (Prisma adapter, rate limiting, multi-host baseURL)
-├── auth-client.ts                  Better Auth client (signIn/signUp/signOut/useSession)
+├── auth.ts                         Better Auth server config (Prisma adapter, rate limiting, multi-host baseURL, Resend email handlers)
+├── auth-client.ts                  Better Auth client (signIn/signUp/signOut/useSession/requestPasswordReset/resetPassword)
 ├── prisma.ts                       Prisma client (Neon driver adapter)
 ├── newsapi.ts                      NewsAPI fetching + per-category keyword filtering
 ├── rate-limit.ts                   In-memory rate limiter for non-auth API routes
@@ -155,6 +160,12 @@ DATABASE_URL_UNPOOLED=your_direct_connection_string
 # Better Auth - random secret used to sign sessions/cookies
 BETTER_AUTH_SECRET=your_generated_secret
 
+# Resend API key, used to send email verification and password-reset emails.
+# Sending "from" a verified domain requires setting one up in Resend
+# (see lib/auth.ts) - without one, mail can only be sent to the address
+# on your own Resend account.
+RESEND_API_KEY=your_resend_api_key
+
 # NewsAPI key, used by the cron ingestion endpoint
 NEWSAPI_KEY=your_newsapi_key
 
@@ -183,7 +194,7 @@ Articles aren't fetched live — they're pulled from NewsAPI ahead of time and s
 
 ## Deployment
 
-Deployed on Vercel: [vipe-media.vercel.app](https://vipe-media.vercel.app). No custom domain yet — `lib/auth.ts` allows both `localhost:3000` and any `*.vercel.app` host (including per-branch preview deployments) via Better Auth's `baseURL.allowedHosts`.
+Deployed on Vercel: [vipe-media.vercel.app](https://vipe-media.vercel.app). No custom domain yet — `lib/auth.ts` allows both `localhost:3000` and any `*.vercel.app` host (including per-branch preview deployments) via Better Auth's `baseURL.allowedHosts`. Verification/reset emails are sent from the `vipemedia.pixelstack.me` subdomain, verified in Resend.
 
 ## Planned Next Steps
 
