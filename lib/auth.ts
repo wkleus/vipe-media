@@ -5,6 +5,20 @@ import { prisma } from "@/lib/prisma";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
+// The Resend SDK returns { data, error } instead of throwing
+// Shared by both sendVerificationEmail and sendResetPassword below
+async function sendMail(to: string, subject: string, html: string) {
+  const { error: sendError } = await resend.emails.send({
+    from: "VIPE Media <noreply@vipemedia.pixelstack.me>",
+    to,
+    subject,
+    html,
+  });
+  if (sendError) {
+    console.error(`[auth] Failed to send "${subject}" email:`, sendError);
+  }
+}
+
 export const auth = betterAuth({
   // Object form instead of a single string: the app is reachable under
   // more than one host (Vercel preview deployments each get their own
@@ -25,9 +39,19 @@ export const auth = betterAuth({
   emailAndPassword: {
     enabled: true,
     // Sign-in is blocked until the address is verified (see
-    // emailVerification below) -> without this, "enabled: true" alone
+    // emailVerification below); without this, "enabled: true" alone
     // would let anyone register with an email they don't own
     requireEmailVerification: true,
+    sendResetPassword: async ({ user, url }) => {
+      await sendMail(
+        user.email,
+        "Setze dein Passwort zurück",
+        `<p>Hallo${user.name ? ` ${user.name}` : ""},</p>
+<p>klicke auf den folgenden Link, um ein neues Passwort zu vergeben:</p>
+<p><a href="${url}">Neues Passwort vergeben</a></p>
+<p>Falls du das nicht angefordert hast, kannst du diese E-Mail ignorieren - dein Passwort bleibt unverändert.</p>`,
+      );
+    },
   },
   emailVerification: {
     sendOnSignUp: true,
@@ -35,26 +59,21 @@ export const auth = betterAuth({
     // instead of sending them back to /login to sign in again
     autoSignInAfterVerification: true,
     sendVerificationEmail: async ({ user, url }) => {
-      const { error: sendError } = await resend.emails.send({
-        from: "VIPE Media <noreply@vipemedia.pixelstack.me>",
-        to: user.email,
-        subject: "Bestätige deine E-Mail-Adresse",
-        html: `<p>Hallo${user.name ? ` ${user.name}` : ""},</p>
+      await sendMail(
+        user.email,
+        "Bestätige deine E-Mail-Adresse",
+        `<p>Hallo${user.name ? ` ${user.name}` : ""},</p>
 <p>bitte bestätige deine E-Mail-Adresse, um dein VIPE-Media-Konto zu aktivieren:</p>
 <p><a href="${url}">E-Mail-Adresse bestätigen</a></p>
 <p>Falls du dich nicht registriert hast, kannst du diese E-Mail ignorieren.</p>`,
-      });
-      // The Resend SDK returns { data, error } instead of throwing, so a
-      // failure here would otherwise pass silently - sign-up would still
-      // succeed with a 200, but no email (and no dashboard log entry)
-      if (sendError) {
-        console.error("[auth] Failed to send verification email:", sendError);
-      }
+      );
     },
   },
-  // Login/register are prime brute-force/spam targets, and Better Auth doesn't rate-limit by default;
-  // "database" storage reuses our existing Postgres via Prisma; global default stays loose;
-  // sign-in/sign-up get tighter, endpoint-specific limits since those are the actual abuse targets
+  // Login/register/forgot-password are prime brute-force/spam/enumeration
+  // targets, and Better Auth doesn't rate-limit by default; "database"
+  // storage reuses our existing Postgres via Prisma; global default stays
+  // loose; these three get tighter, endpoint-specific limits since those
+  // are the actual abuse targets
   rateLimit: {
     enabled: true,
     window: 60,
@@ -63,6 +82,7 @@ export const auth = betterAuth({
     customRules: {
       "/sign-in/email": { window: 60, max: 5 },
       "/sign-up/email": { window: 60, max: 3 },
+      "/request-password-reset": { window: 60, max: 3 },
     },
   },
 });

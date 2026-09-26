@@ -1,49 +1,40 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { Loader2 } from "lucide-react";
 import { FormMessage } from "@/components/auth/form-message";
-import { PasswordField, TextField } from "@/components/auth/fields";
-import { signIn } from "@/lib/auth-client";
+import { TextField } from "@/components/auth/fields";
+import { requestPasswordReset } from "@/lib/auth-client";
 
-export default function LoginPage() {
-  const router = useRouter();
+export default function ForgotPasswordPage() {
   const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
-  // Submit gating: fields must be filled, no double-submit while loading/after success
-  // NOTE: No min-length check here - login must not enforce register password rules
-  const canSubmit =
-    email.trim().length > 0 && password.length > 0 && !isLoading && !success;
+  const canSubmit = email.trim().length > 0 && !isLoading && !success;
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!canSubmit) return;
 
     setError(null);
-    setSuccess(false);
     setIsLoading(true);
 
-    const { error: signInError } = await signIn.email({
+    const { error: requestError } = await requestPasswordReset({
       email: email.trim(),
-      password,
+      redirectTo: "/reset-password",
     });
 
     setIsLoading(false);
-    if (signInError) {
-      setError(
-        signInError.status === 403
-          ? "Bitte bestätige zuerst deine E-Mail-Adresse (Link in der E-Mail, die wir dir bei der Registrierung geschickt haben)."
-          : "E-Mail oder Passwort ist falsch.",
-      );
+    if (requestError) {
+      // Not distinguishing "email doesn't exist" from other errors here:
+      // doing so would let someone probe which addresses are registered
+      // (email enumeration). Same success message either way below.
+      setError("Etwas ist schiefgelaufen. Bitte versuch es erneut.");
     } else {
       setSuccess(true);
-      router.push("/");
     }
   }
 
@@ -61,13 +52,11 @@ export default function LoginPage() {
         </p>
 
         <h1 className="mt-8 text-center font-serif text-2xl font-semibold">
-          Willkommen zurück
+          Passwort vergessen?
         </h1>
         <p className="mt-1 text-center text-sm text-foreground/60">
-          Noch kein Konto?{" "}
-          <Link href="/register" className="text-accent hover:underline">
-            Jetzt registrieren
-          </Link>
+          Gib deine E-Mail-Adresse ein, wir schicken dir einen Link zum
+          Zurücksetzen.
         </p>
 
         <form onSubmit={handleSubmit} className="mt-8 space-y-4">
@@ -82,22 +71,12 @@ export default function LoginPage() {
             label="E-Mail"
           />
 
-          <PasswordField
-            value={password}
-            onChange={setPassword}
-            labelExtra={
-              <Link
-                href="/forgot-password"
-                className="text-xs text-foreground/40 hover:text-accent hover:underline"
-              >
-                Vergessen?
-              </Link>
-            }
-          />
-
           {error && <FormMessage type="error">{error}</FormMessage>}
           {success && (
-            <FormMessage type="success">Anmeldung erfolgreich</FormMessage>
+            <FormMessage type="success">
+              Falls ein Konto mit dieser E-Mail existiert, haben wir dir einen
+              Link zum Zurücksetzen geschickt.
+            </FormMessage>
           )}
 
           <button
@@ -106,13 +85,16 @@ export default function LoginPage() {
             className="flex w-full items-center justify-center gap-2 rounded-lg bg-accent py-2.5 text-sm font-medium text-white transition-opacity hover:opacity-90 disabled:opacity-60"
           >
             {isLoading && <Loader2 size={16} className="animate-spin" />}
-            {isLoading ? "Anmeldung…" : "Anmelden"}
+            {isLoading ? "Wird gesendet…" : "Link anfordern"}
           </button>
         </form>
 
         <p className="mt-6 text-center text-xs text-foreground/40">
-          <Link href="/" className="hover:text-foreground/60 hover:underline">
-            ← Zurück zur Startseite
+          <Link
+            href="/login"
+            className="hover:text-foreground/60 hover:underline"
+          >
+            ← Zurück zum Login
           </Link>
         </p>
       </div>
