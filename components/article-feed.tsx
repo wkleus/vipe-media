@@ -1,4 +1,4 @@
-// Category filter + article grid with infinite scroll
+// Category filter + article grid with explicit "Load more" pagination
 // Fetch real data from /api/articles
 
 "use client";
@@ -8,7 +8,7 @@ import type { Category } from "@prisma/client";
 import { ArticleCard, type ArticleCardData } from "@/components/article-card";
 import { CategoryNav } from "@/components/category-nav";
 
-const PAGE_SIZE = 6;
+const PAGE_SIZE = 12;
 const CULTURE_CATEGORY_COUNT = 5; // Bildende Kunst, Musik, Film, Literatur, Ausstellungen
 
 interface ArticlesResponse {
@@ -40,10 +40,7 @@ export function ArticleFeed() {
 
   const cursorRef = useRef<string | null>(null);
   const categoryRef = useRef<Category | "ALL">(category);
-  const hasNextPageRef = useRef(true);
   const isLoadingRef = useRef(false); // guards against overlapping loads
-  const isSentinelVisibleRef = useRef(false);
-  const sentinelRef = useRef<HTMLDivElement>(null);
 
   const edition = new Intl.DateTimeFormat("de-DE", {
     weekday: "long",
@@ -53,7 +50,7 @@ export function ArticleFeed() {
 
   async function loadMore(reset: boolean) {
     if (isLoadingRef.current) return;
-    if (!reset && !hasNextPageRef.current) return;
+    if (!reset && !hasNextPage) return;
 
     isLoadingRef.current = true;
     startTransition(() => {
@@ -71,14 +68,12 @@ export function ArticleFeed() {
         if (reset) return page.items;
 
         // Guard against duplicate keys if same page is appended twice
-        // (IntersectionObserver / overlapping loadMore races)
         const seen = new Set(prev.map((a) => a.id));
         const unique = page.items.filter((a) => !seen.has(a.id));
         return [...prev, ...unique];
       });
 
       cursorRef.current = page.nextCursor;
-      hasNextPageRef.current = page.hasNextPage;
       setHasNextPage(page.hasNextPage);
       setError(null);
     } catch (err) {
@@ -89,42 +84,16 @@ export function ArticleFeed() {
     setIsInitialLoading(false);
     setIsLoadingMore(false);
     isLoadingRef.current = false;
-
-    // Observer only fires on visibility change, not continuously
-    if (isSentinelVisibleRef.current && hasNextPageRef.current) {
-      void loadMore(false);
-    }
   }
 
   // Reset feed whenever category changes
   useEffect(() => {
     categoryRef.current = category;
     cursorRef.current = null;
-    hasNextPageRef.current = true;
+    isLoadingRef.current = false; // allow a fresh load if a previous request is still in flight
     void loadMore(true);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [category]);
-
-  // IntersectionObserver -> Its callback always calls loadMore(false), which reads
-  // current values from refs -> so observer never needs to be recreated
-  useEffect(() => {
-    const node = sentinelRef.current;
-    if (!node) return;
-
-    const observer = new IntersectionObserver(
-      (entries) => {
-        isSentinelVisibleRef.current = entries[0].isIntersecting;
-        if (entries[0].isIntersecting) {
-          void loadMore(false);
-        }
-      },
-      { rootMargin: "300px" },
-    );
-
-    observer.observe(node);
-    return () => observer.disconnect();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
 
   return (
     <div>
@@ -164,7 +133,7 @@ export function ArticleFeed() {
         {error ? (
           <p className="py-12 text-center text-sm text-accent">{error}</p>
         ) : isInitialLoading ? (
-          <SkeletonGrid count={6} />
+          <SkeletonGrid count={PAGE_SIZE} />
         ) : articles.length === 0 ? (
           <p className="py-12 text-center text-sm text-foreground/50">
             Keine Artikel in dieser Kategorie.
@@ -177,9 +146,20 @@ export function ArticleFeed() {
           </div>
         )}
 
-        <div ref={sentinelRef} className="h-1" />
-
         {isLoadingMore && <SkeletonGrid count={3} />}
+
+        {!isInitialLoading && hasNextPage && (
+          <div className="flex justify-center py-8">
+            <button
+              type="button"
+              onClick={() => void loadMore(false)}
+              disabled={isLoadingMore}
+              className="rounded-full border border-border bg-background px-6 py-2.5 text-sm font-medium text-foreground/80 transition hover:border-foreground/30 hover:text-foreground disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              {isLoadingMore ? "Wird geladen…" : "Weitere Artikel laden"}
+            </button>
+          </div>
+        )}
 
         {!hasNextPage && !isInitialLoading && articles.length > 0 && (
           <p className="py-8 text-center text-sm text-foreground/40">
