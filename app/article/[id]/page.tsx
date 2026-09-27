@@ -5,6 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Category } from "@prisma/client";
+import { ExternalLink } from "lucide-react";
 import { prisma } from "@/lib/prisma";
 
 const CATEGORY_LABELS: Record<Category, string> = {
@@ -18,6 +19,17 @@ const CATEGORY_LABELS: Record<Category, string> = {
   SONSTIGES: "Sonstiges",
 };
 
+// NewsAPI often returns truncated content with "… [+1234 chars]" – which should be removed
+function cleanSnippet(text: string | null | undefined): string | null {
+  if (!text) return null;
+  return (
+    text
+      .replace(/\s*…\s*\[\+\d+\s*chars?\]\s*$/i, "")
+      .replace(/\s*\.\.\.\s*\[\+\d+\s*chars?\]\s*$/i, "")
+      .trim() || null
+  );
+}
+
 export default async function ArticleDetailPage({
   params,
 }: {
@@ -29,7 +41,6 @@ export default async function ArticleDetailPage({
     where: { id },
   });
 
-  // Trigger Next.js' built-in not-found.tsx / 404 page if no article matches
   if (!article) {
     notFound();
   }
@@ -39,6 +50,10 @@ export default async function ArticleDetailPage({
     dateStyle: "long",
     timeStyle: "short",
   });
+
+  // Prefer description, otherwise cleaned content
+  const snippet =
+    cleanSnippet(article.description) || cleanSnippet(article.content);
 
   return (
     <main className="mx-auto max-w-3xl px-4 py-8">
@@ -74,9 +89,26 @@ export default async function ArticleDetailPage({
         </div>
       )}
 
-      <div className="mt-6 space-y-4 text-lg leading-relaxed text-foreground/90">
-        {/* Fallback: content if present, otherwise description */}
-        <p>{article.content || article.description}</p>
+      {snippet && (
+        <div className="mt-6 text-lg leading-relaxed text-foreground/90">
+          <p>{snippet}</p>
+        </div>
+      )}
+
+      {/* Prominent link to original source – NewsAPI never provides full text */}
+      <div className="mt-8">
+        <a
+          href={article.url}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex items-center gap-2 rounded-full bg-accent px-5 py-2.5 text-sm font-medium text-white transition hover:opacity-90 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+        >
+          Originalartikel bei {article.sourceName} lesen
+          <ExternalLink className="h-4 w-4" aria-hidden />
+        </a>
+        <p className="mt-2 text-xs text-foreground/40">
+          Der vollständige Text ist nur auf der Seite der Quelle verfügbar.
+        </p>
       </div>
     </main>
   );
