@@ -23,7 +23,7 @@ export const auth = betterAuth({
   // Object form instead of a single string: the app is reachable under
   // more than one host (Vercel preview deployments each get their own
   // *.vercel.app URL; a custom domain will be added here once one
-  // exists). Better Auth validates the incoming request's host against
+  // exists); Better Auth validates the incoming request's host against
   // this list and builds redirects/cookies for whichever one matched
   baseURL: {
     allowedHosts: [
@@ -36,6 +36,19 @@ export const auth = betterAuth({
   database: prismaAdapter(prisma, {
     provider: "postgresql",
   }),
+  user: {
+    additionalFields: {
+      // FREE (default) or PREMIUM - see lib/plan.ts
+      // input: false is essential: additional fields are settable by the
+      // user at sign-up by default, which would let anyone register as PREMIUM
+      plan: {
+        type: "string",
+        required: false,
+        defaultValue: "FREE",
+        input: false,
+      },
+    },
+  },
   emailAndPassword: {
     enabled: true,
     // Sign-in is blocked until the address is verified (see

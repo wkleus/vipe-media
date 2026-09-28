@@ -60,6 +60,8 @@ model User {
   accounts      Account[]
   bookmarks     Bookmark[]
 
+  plan String? @default("FREE")
+
   @@unique([email])
   @@map("user")
 }
