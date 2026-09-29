@@ -1,8 +1,8 @@
 import Link from "next/link";
 
-// Static, site-wide footer - server component (no interactivity needed)
+// Static, site-wide footer - server component
 const PRODUCT_LINKS = [
-  { label: "Premium", href: "/register" }, // NOTE: later -> dedicated /premium landing page
+  { label: "Premium", href: "/premium" },
   { label: "Registrieren", href: "/register" },
   { label: "Anmelden", href: "/login" },
 ];

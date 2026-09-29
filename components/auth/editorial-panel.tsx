@@ -1,27 +1,5 @@
-import { BookmarkCheck, Bot, SlidersHorizontal, Sparkles } from "lucide-react";
-
-const PREMIUM_FEATURES = [
-  {
-    icon: Sparkles,
-    title: "KI-Zusammenfassungen",
-    text: "Die Essenz jedes Artikels in Sekunden",
-  },
-  {
-    icon: SlidersHorizontal,
-    title: "Persönlicher Feed",
-    text: "News, gefiltert nach deinen Interessen",
-  },
-  {
-    icon: Bot,
-    title: "AI-Kultur-Agent",
-    text: "Dein persönlicher Kurator für Kunst & Kultur",
-  },
-  {
-    icon: BookmarkCheck,
-    title: "Lesezeichen-Sync",
-    text: "Deine Sammlung auf allen Geräten",
-  },
-];
+import { Sparkles } from "lucide-react";
+import { PREMIUM_FEATURES } from "@/lib/premium-features";
 
 // Left-hand editorial panel advertising the premium product (desktop only)
 export function EditorialPanel() {

@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { Bookmark, ChevronDown, CreditCard, LogOut } from "lucide-react";
 import { signOut, useSession } from "@/lib/auth-client";
+import { isPremium } from "@/lib/plan";
 
 // Logged-out: compact login link + register CTA
 function AuthButtons() {
@@ -27,7 +28,7 @@ function AuthButtons() {
 }
 
 // Logged-in: avatar + dropdown menu
-function UserDropdown({ name }: { name: string }) {
+function UserDropdown({ name, premium }: { name: string; premium: boolean }) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
 
@@ -78,8 +79,13 @@ function UserDropdown({ name }: { name: string }) {
           >
             <div className="border-b border-border px-3.5 py-2.5">
               <p className="text-sm font-medium">{name}</p>
-              <p className="text-xs text-foreground/50">Kostenloses Konto</p>
-              {/* NOTE:Later: "PREMIUM" badge when subscriptionStatus === "PREMIUM" */}
+              <p className="text-xs text-foreground/50">
+                {premium ? (
+                  <span className="font-medium text-accent">Premium</span>
+                ) : (
+                  "Kostenloses Konto"
+                )}
+              </p>
             </div>
 
             {menuItems.map((item) => (
@@ -126,5 +132,5 @@ export function UserMenu() {
   }
 
   const name = session.user.name || session.user.email;
-  return <UserDropdown name={name} />;
+  return <UserDropdown name={name} premium={isPremium(session.user)} />;
 }
