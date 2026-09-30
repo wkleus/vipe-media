@@ -141,3 +141,20 @@ model RateLimit {
   @@unique([key])
   @@map("rateLimit")
 }
+
+model Briefing {
+  id String @id @default(cuid())
+
+  category Category
+  // Calendar date this briefing covers (time component zeroed out) -
+  // together with category this is the natural key: one briefing per
+  // category per day.
+  date     DateTime @db.Date
+
+  content String @db.Text
+
+  createdAt DateTime @default(now())
+
+  @@unique([category, date])
+  @@map("briefing")
+}
