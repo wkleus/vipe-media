@@ -18,7 +18,7 @@ export const PREMIUM_FEATURES: {
     icon: Newspaper,
     title: "Kultur-Briefing",
     text: "Der Tag in Kunst & Kultur, täglich für dich zusammengefasst",
-    available: false,
+    available: true,
   },
   {
     icon: SlidersHorizontal,

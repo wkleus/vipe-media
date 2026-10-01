@@ -25,6 +25,12 @@ export function Header() {
         >
           Lesezeichen
         </Link>
+        <Link
+          href="/briefing"
+          className="ml-4 text-xs font-medium text-foreground/70 hover:text-foreground sm:text-sm"
+        >
+          Briefing
+        </Link>
         <ThemeToggle />
 
         <div className="h-5 w-px bg-border" />
